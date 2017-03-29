@@ -4,6 +4,13 @@ defmodule Elastix.Document do
   alias Elastix.HTTP
 
   @doc false
+  def create(elastic_url, index_name, type_name, id, data, query_params \\ []) do
+    elastic_url <> make_path(index_name, type_name, id, query_params, "_create")
+    |> HTTP.put(Poison.encode!(data))
+    |> process_response
+  end
+
+  @doc false
   def index(elastic_url, index_name, type_name, id, data) do
     index(elastic_url, index_name, type_name, id, data, [])
   end
@@ -54,8 +61,16 @@ defmodule Elastix.Document do
   end
 
   @doc false
-  def make_path(index_name, type_name, id \\ nil, query_params) do
-    path = "/#{index_name}/#{type_name}/#{id}"
+  def add_suffix(path, suffix) do
+    case suffix do
+      nil -> path
+      _ -> "#{path}/#{suffix}"
+    end
+  end
+
+  @doc false
+  def make_path(index_name, type_name, id \\ nil, query_params, suffix \\ nil) do
+    path = "/#{index_name}/#{type_name}/#{id}" |> add_suffix(suffix)
 
     case query_params do
       [] -> path

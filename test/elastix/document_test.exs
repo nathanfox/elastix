@@ -22,6 +22,24 @@ defmodule Elastix.DocumentTest do
     assert Document.make_path(@test_index, "tweet", 2, version: 34, ttl: "1d") == "/#{@test_index}/tweet/2?version=34&ttl=1d"
   end
 
+  test "create should create and index with data" do
+    response = Document.index @test_url, @test_index, "message", 1, @data
+
+    assert response.status_code == 201
+    assert response.body["_id"] == "1"
+    assert response.body["_index"] == @test_index
+    assert response.body["_type"] == "message"
+    assert response.body["created"] == true
+  end
+
+  test "create should fail when document exists" do
+    Document.index @test_url, @test_index, "message", 1, @data
+    response = Document.create @test_url, @test_index, "message", 1, @data
+
+    assert response.status_code == 409
+    assert response.body["error"]["index"] == @test_index
+  end
+
   test "index should create and index with data" do
     response = Document.index @test_url, @test_index, "message", 1, @data
 
